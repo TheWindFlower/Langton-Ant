@@ -10,46 +10,10 @@
 using std::tuple;
 using std::vector;
 
-// game rule cap
-const int UNDER_POPULATION_CAP = 2;        // below that -> die DEFAULT = 2
-const int OVER_POPULATION_CAP = 3;         // over that -> die or reproduce DEFAULT = 3
-const int REPRODUCTION_POPULATION_CAP = 3; // eproduce cap  DEFAULT = 3
-/*
-notable exemple(U=UNDER_POPULATION_CAP, O=OVER_POPULATION_CAP, R=REPRODUCTION_POPULATION_CAP):
-U=1
-O=4
-R=3
-lineare pattern
-
-U=4
-O=9
-R=5
-cave pattern
-*/
-
-// determine the integer the most frequent in a vector
-int mostFrequent(vector<int> &vec)
-{
-    // some chatGPT black magic
-    std::unordered_map<int, int> freq;
-    int max_freq = 0, res = vec[0];
-
-    for (int num : vec)
-    {
-        freq[num]++;
-        if (freq[num] > max_freq)
-        {
-            max_freq = freq[num];
-            res = num;
-        }
-    }
-    return res;
-}
-
 // return the next board of the game given the current one
-vector<tuple<int, int, bool, int>> next_generation(const vector<tuple<int, int, bool, int>> &current_status, int rows, int columns)
+vector<tuple<int, int, bool>> next_generation(const vector<tuple<int, int, bool>> &current_status, int rows, int columns)
 {
-    vector<tuple<int, int, bool, int>> next_status;
+    vector<tuple<int, int, bool>> next_status;
     // for each cell count the friendly || enemy neighbors
     for (int i = 0; i < rows; i++)
     {
@@ -136,16 +100,16 @@ vector<tuple<int, int, bool, int>> next_generation(const vector<tuple<int, int, 
     return (next_status);
 }
 
-vector<tuple<int, int, bool, int>> start(std::string filename, int rows, int columns)
+vector<tuple<int, int, bool>> start(std::string filename, int rows, int columns)
 {
-    vector<tuple<int, int, bool, int>> coordinates;
+    vector<tuple<int, int, bool>> coordinates;
 
     // Initialize all coordinates to false (dead cells so no species)
     for (int i = 0; i < rows; i++)
     {
         for (int j = 0; j < columns; j++)
         {
-            coordinates.push_back(std::make_tuple(i, j, false, 0));
+            coordinates.push_back(std::make_tuple(i, j, false));
         }
     }
 
@@ -161,44 +125,4 @@ vector<tuple<int, int, bool, int>> start(std::string filename, int rows, int col
     inputFile.close();
 
     return coordinates;
-}
-
-void grid_gen(int x, int y)
-{
-    std::srand(time(NULL)); // seed the random number generator
-
-    vector<std::string> end;
-    for (int i = 0; i < x; i++)
-    {
-        for (int j = 0; j < y; j++)
-        {
-            if ((double)std::rand() / RAND_MAX < 0.5)
-            {
-                if (i >= int(x / 2) && j >= int(y / 2)) // top right
-                {
-                    end.push_back(std::to_string(i) + " " + std::to_string(j) + " " + std::to_string(1)); // blue
-                }
-                else if (i <= int(x / 2) && j <= int(y / 2)) // top left
-                {
-                    end.push_back(std::to_string(i) + " " + std::to_string(j) + " " + std::to_string(3)); // green
-                }
-                else if (i >= int(x / 2) && j <= int(y / 2)) // bottom right
-                {
-                    end.push_back(std::to_string(i) + " " + std::to_string(j) + " " + std::to_string(2)); // red
-                }
-                else // bottom left
-                {
-                    end.push_back(std::to_string(i) + " " + std::to_string(j) + " " + std::to_string(4)); // pink
-                }
-            }
-        }
-    }
-
-    std::ofstream file("../data/board.brd");
-    file.clear(); // clear the file
-    for (const std::string &cell : end)
-    {
-        file << cell << std::endl;
-    }
-    file.close();
 }

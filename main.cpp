@@ -22,7 +22,7 @@ int COLUMNS = SCREEN_WIDTH / GRID_SIZE;
 class render
 {
 private:
-    void draw_cells(SDL_Renderer *renderer, vector<tuple<int, int, bool, int>> cells, int rows, int columns)
+    void draw_cells(SDL_Renderer *renderer, vector<tuple<int, int, bool>> cells, int rows, int columns)
     {
         int x, y, cell_kind;
         bool status;
@@ -31,37 +31,9 @@ private:
             x = std::get<0>(t);
             y = std::get<1>(t);
             status = std::get<2>(t);
-            cell_kind = std::get<3>(t);
 
             SDL_Rect rect = {x * GRID_SIZE, y * GRID_SIZE, GRID_SIZE, GRID_SIZE};
-            if (status)
-            {
-                if (cell_kind == 1)
-                {
-                    SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-                }
-                else if (cell_kind == 2)
-                {
-                    SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-                }
-                else if (cell_kind == 3)
-                {
-                    SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255);
-                }
-                else if (cell_kind == 4)
-                {
-                    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255); // pink
-                }
-                else
-                {
-                    // non specified species
-                    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
-                }
-            }
-            else
-            {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
-            }
+            SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
 
             SDL_RenderFillRect(renderer, &rect);
         }
@@ -101,7 +73,7 @@ public:
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        vector<tuple<int, int, bool, int>> cells_status = start("../data/board.brd", ROWS, COLUMNS); // load initale game stat
+        vector<tuple<int, int, bool>> cells_status = start("../data/board.brd", ROWS, COLUMNS); // load initale game stat
 
         // Wait for user to quit
         bool quit = false;
@@ -163,19 +135,10 @@ int main(int argc, char *argv[])
 {
     int delay = 0;
     bool args = false;
-    bool gen = false;
     for (int i = 0; i < argc; i++) // loop over each given arguments
     {
         char *instr = argv[i];
 
-        if (strcmp(instr, "-r") == 0 || strcmp(instr, "--regen") == 0)
-        {
-            gen = true;
-        }
-        if (strcmp(instr, "-l") == 0 || strcmp(instr, "--load") == 0)
-        {
-            continue;
-        }
         if (strcmp(instr, "-w") == 0 || strcmp(instr, "--width") == 0)
         {
             args = true;
@@ -215,14 +178,6 @@ int main(int argc, char *argv[])
     ROWS = SCREEN_HEIGHT / GRID_SIZE;
     COLUMNS = SCREEN_WIDTH / GRID_SIZE;
     render rd;
-    if (gen)
-    {
-        grid_gen(ROWS, COLUMNS);
 
-        rd.sdl(delay);
-    }
-    else
-    {
-        rd.sdl(delay);
-    }
+    rd.sdl(delay);
 }
