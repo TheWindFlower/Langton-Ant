@@ -1,7 +1,6 @@
 #include <vector>
 #include <tuple>
 #include <string>
-#include <fstream>
 #include <iostream>
 #include <ctime>
 #include <unordered_map>
@@ -11,96 +10,51 @@ using std::tuple;
 using std::vector;
 
 // return the next board of the game given the current one
-vector<tuple<int, int, bool>> next_generation(const vector<tuple<int, int, bool>> &current_status, int rows, int columns)
+tuple<int, tuple<int, int>, vector<tuple<int, int, bool>>> next_generation(const vector<tuple<int, int, bool>> &current_status, tuple<int, int> ant_pos, int ant_angle, int rows, int columns)
 {
-    vector<tuple<int, int, bool>> next_status;
-    // for each cell count the friendly || enemy neighbors
-    for (int i = 0; i < rows; i++)
+    vector<tuple<int, int, bool>> next_status = current_status;
+    int x_pos, y_pos;
+    int angle = ant_angle;
+    tuple<int, int> next_ant_pos;
+    std::tie(x_pos, y_pos) = ant_pos;
+    bool case_color = std::get<2>(current_status[x_pos * columns + y_pos]);
+
+    if (case_color)
     {
-        for (int j = 0; j < columns; j++)
+        // if the case is black
+        // change the color of the case
+        next_status.emplace_back(x_pos, y_pos, false);
+        // set the next angle
+        if (angle >= 90)
         {
-            int alive_neighbors = 0;
-            int friendly_neighbors = 0;
-            int enemy_neighbors = 0;
-            int cells_type = 0;                                                      // default = dead
-            bool current_cell_status = std::get<2>(current_status[i * columns + j]); // dead or alive
-            if (std::get<2>(current_status[i * columns + j]) == true)                // if the cell is alive then get the species
-            {
-                cells_type = std::get<3>(current_status[i * columns + j]); // get the species
-            }
-            else
-            {
-                cells_type = 0; // dead cell
-            }
-
-            // Check neighbors (for each cell check the neighbors cells)
-            vector<int> enemy_neighbors_vect; // vector of enemy species
-            for (int x = -1; x <= 1; x++)
-            {
-                for (int y = -1; y <= 1; y++)
-                {
-
-                    int neighbor_row = i + x;
-                    int neighbor_column = j + y;
-                    // Check if neighbor is within bounds
-                    if (neighbor_row >= 0 && neighbor_row < rows && neighbor_column >= 0 && neighbor_column < columns)
-                    {
-                        // Ignore current cell
-                        if (x == 0 && y == 0)
-                        {
-                            continue;
-                        }
-                        // Count alive neighbors
-                        if (std::get<2>(current_status[neighbor_row * columns + neighbor_column]))
-                        {
-                            alive_neighbors++;
-                            if (std::get<3>(current_status[neighbor_row * columns + neighbor_column]) == cells_type) // if the cells is dead(species=0) then their is no friendly
-                            {
-                                friendly_neighbors++;
-                            }
-                            else
-                            {
-                                enemy_neighbors_vect.push_back(std::get<3>(current_status[neighbor_row * columns + neighbor_column]));
-                                enemy_neighbors++;
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Apply Game of Life rules
-            if (current_cell_status && alive_neighbors < UNDER_POPULATION_CAP)
-            {
-                // underpopulation
-                next_status.emplace_back(i, j, false, cells_type); // die
-            }
-            else if (current_cell_status && (alive_neighbors == UNDER_POPULATION_CAP || alive_neighbors == OVER_POPULATION_CAP))
-            {
-                // Survival
-                next_status.emplace_back(i, j, true, cells_type); // stay alive
-            }
-            else if (current_cell_status && alive_neighbors > OVER_POPULATION_CAP)
-            {
-                // Overpopulation
-                next_status.emplace_back(i, j, false, cells_type); // die
-            }
-            else if (!current_cell_status && alive_neighbors == REPRODUCTION_POPULATION_CAP)
-            {
-                // Reproduction
-                // need to check witch neighbors is the more present
-                next_status.emplace_back(i, j, true, mostFrequent(enemy_neighbors_vect));
-            }
-            else
-            {
-                // Stasis
-                next_status.emplace_back(i, j, current_cell_status, cells_type);
-            }
+            angle -= 90;
+        }
+        else
+        {
+            angle = 270;
+        }
+        // move the ant in the given angle
+        if (angle == 0)
+        {
+            next_ant_pos = std::make_tuple(x_pos, y_pos - 1);
+        }
+        else if (angle == 90)
+        {
+            next_ant_pos = std::make_tuple(x_pos + 1, y_pos);
+        }
+        else if (angle == 180)
+        {
+            next_ant_pos = std::make_tuple(x_pos, y_pos - 1);
+        }
+        else if (angle == 270)
+        {
+            next_ant_pos = std::make_tuple(x_pos - 1, y_pos);
         }
     }
-    return (next_status);
+    return std::make_tuple(angle, next_ant_pos, next_status);
 }
 
-vector<tuple<int, int, bool>> start(std::string filename, int rows, int columns)
+vector<tuple<int, int, bool>> start(int rows, int columns)
 {
     vector<tuple<int, int, bool>> coordinates;
 
@@ -112,17 +66,5 @@ vector<tuple<int, int, bool>> start(std::string filename, int rows, int columns)
             coordinates.push_back(std::make_tuple(i, j, false));
         }
     }
-
-    // Open file and set bool to true (1) for specified coordinates and set
-    std::ifstream inputFile(filename);
-    int x, y, kind;
-    while (inputFile >> x >> y >> kind)
-    {
-        std::cout << kind << std::endl;
-        int index = x * columns + y;
-        coordinates[index] = std::make_tuple(x, y, true, kind);
-    }
-    inputFile.close();
-
     return coordinates;
 }

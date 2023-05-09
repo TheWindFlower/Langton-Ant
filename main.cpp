@@ -24,7 +24,7 @@ class render
 private:
     void draw_cells(SDL_Renderer *renderer, vector<tuple<int, int, bool>> cells, int rows, int columns)
     {
-        int x, y, cell_kind;
+        int x, y;
         bool status;
         for (const auto &t : cells)
         {
@@ -73,9 +73,12 @@ public:
         // Clear screen
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
-        vector<tuple<int, int, bool>> cells_status = start("../data/board.brd", ROWS, COLUMNS); // load initale game stat
+        vector<tuple<int, int, bool>> cells_status = start(ROWS, COLUMNS); // load initale game stat
 
         // Wait for user to quit
+        tuple<int, int> ant_pos = std::make_tuple(ROWS / 2, COLUMNS / 2); // set the ant to the middle of the screen
+        int ant_angle = 0;
+
         bool quit = false;
         SDL_Event event;
 
@@ -85,7 +88,7 @@ public:
             auto start_chrono = std::chrono::high_resolution_clock::now();
 
             // Draw grid
-            SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+            SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
             SDL_RenderClear(renderer);
             for (int i = 0; i < ROWS; i++)
             {
@@ -100,11 +103,14 @@ public:
             draw_cells(renderer, cells_status, ROWS, COLUMNS);
             // Update screen
             SDL_RenderPresent(renderer);
+
             std::this_thread::sleep_for(std::chrono::milliseconds(delay));
 
             // calc of the next game status
             auto start_calc = std::chrono::high_resolution_clock::now();
-            cells_status = next_generation(cells_status, ROWS, COLUMNS);
+
+            std::tie(ant_angle, ant_pos, cells_status) = next_generation(cells_status, ant_pos, ant_angle, ROWS, COLUMNS);
+
             auto end_calc = std::chrono::high_resolution_clock::now();
             auto duration_calc = std::chrono::duration_cast<std::chrono::microseconds>(end_calc - start_calc);
             std::cout << "Calc execution time: " << duration_calc.count() << " microseconds." << std::endl;
@@ -180,4 +186,5 @@ int main(int argc, char *argv[])
     render rd;
 
     rd.sdl(delay);
+    return 0;
 }

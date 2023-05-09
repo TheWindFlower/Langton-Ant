@@ -5,7 +5,6 @@
 #include <tuple>
 #include <string>
 
-std::vector<std::tuple<int, int, bool>> next_generation(const std::vector<std::tuple<int, int, bool>> &current_status, int rows, int columns);
-std::vector<std::tuple<int, int, bool>> start(std::string filename, int rows, int columns);
-void grid_gen(int x, int y);
+std::tuple<int, std::tuple<int, int>, std::vector<std::tuple<int, int, bool>>> next_generation(const std::vector<std::tuple<int, int, bool>> &current_status, tuple<int, int> ant_pos, int ant_angle, int rows, int columns);
+std::vector<std::tuple<int, int, bool>> start(int rows, int columns);
 #endif
